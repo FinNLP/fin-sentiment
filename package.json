@@ -1,0 +1,25 @@
+{
+  "name": "fin-sentiment",
+  "version": "1.0.0",
+  "description": "Advanced sentiment detection for FIN NLP",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "Alex Corvi <alex@arrayy.com>",
+  "license": "MIT",
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/finnlp/en-pos.git"
+  },
+  "keywords": [
+    "nlp",
+    "sentiment"
+  ],
+  "bugs": {
+    "url": "https://github.com/finnlp/en-pos/issues"
+  },
+  "homepage": "https://github.com/finnlp/en-pos#readme"
+}
