@@ -1,11 +1,9 @@
 import {Fin} from "finnlp";
 import dict from "./dictionary";
 
-// type declaration
 export namespace Fin {
     export interface FinReturn {
-        tokenSentiment:()=>number[][];
-        sentenceSentiment:()=>number[];
+        sentiment:()=>number[][];
     }
 }
 
