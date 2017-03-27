@@ -3815,7 +3815,6 @@ const dict:{
   "periled": -2,
   "periling": -2,
   "jeweling": 1
-}
-
+};
 
 export default dict;

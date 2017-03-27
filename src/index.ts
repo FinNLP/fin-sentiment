@@ -1,55 +1,55 @@
-import {Fin} from "finnlp";
 import dict from "./dictionary";
+import * as Fin from "finnlp";
+import "fin-negation";
+import "fin-emphasis";
 
-export namespace Fin {
-    export interface FinReturn {
-        sentiment:()=>number[][];
-    }
+declare module "finnlp" {
+	export interface Run {
+		sentiment:()=>number[][];
+	}
 }
 
-export function sentiment(input:Fin.FinReturn){
-    const calculateSentiment = function () {
-        // initialize all with 0
-        const sentiment:number[][] = [];
-        input.tokens.forEach((sentenceTokens,sentenceIndex)=>{
-            sentiment[sentenceIndex] = []; 
-            sentenceTokens.forEach((token,tokenIndex)=>{
-                sentiment[sentenceIndex][tokenIndex] = 0;
-            });
-        });
-        // analyze and add scores
-        input.tokens.forEach((sentenceTokens,sentenceIndex)=>{
-            sentenceTokens.forEach((token,tokenIndex)=>{
-                const sentimentNum = dict[token.toLowerCase()];
-                if(sentimentNum) {
-                    const type = input.tags[sentenceIndex][tokenIndex].charAt(0).toUpperCase();
+Fin.Run.prototype.sentiment = function(this:Fin.Run){
+	const sentiment:number[][] = [];
+	this.sentences.forEach((sentence,sentenceIndex)=>{
+		sentiment[sentenceIndex] = [];
+		sentence.tokens.forEach((token,tokenIndex)=>{
+			sentiment[sentenceIndex][tokenIndex] = 0;
+		});
+		sentence.tokens.forEach((token,tokenIndex)=>{
+			const sentimentNum = dict[token.toLowerCase()];
+			if(sentimentNum) {
+				const tag = sentence.tags[tokenIndex].charAt(0);
+				const subjectIndex = sentence.deps.findIndex(x=>x.label.endsWith("SUBJ") && x.parent === tokenIndex);
+				const objectIndex = sentence.deps.findIndex(x=>(x.label.endsWith("OBJ") || x.label.endsWith("OBL")) && x.parent === tokenIndex);
+				const parentIndex = sentence.deps[tokenIndex].parent;
+				const rootIndex = sentence.deps.findIndex(x=>x.parent === -1);
+				if(tag === "V") { // if verb
+					if(~subjectIndex) // try to subject
+						sentiment[sentenceIndex][subjectIndex] = sentiment[sentenceIndex][subjectIndex] + sentimentNum;
+					else if(~objectIndex) // try to object
+						sentiment[sentenceIndex][objectIndex] = sentiment[sentenceIndex][objectIndex] + sentimentNum;
+					else if(~parentIndex) // try to parent
+						sentiment[sentenceIndex][parentIndex] = sentiment[sentenceIndex][parentIndex] + sentimentNum;
+					else // try to root
+						sentiment[sentenceIndex][rootIndex] = sentiment[sentenceIndex][rootIndex] + sentimentNum;
+				}
+				if(tag === "U") // Interjection: root
+					sentiment[sentenceIndex][rootIndex] = sentiment[sentenceIndex][rootIndex] + sentimentNum;
+				else // all other
+					sentiment[sentenceIndex][parentIndex] = sentiment[sentenceIndex][parentIndex] + sentimentNum;
+			}
+		});
+	});
 
-                    // Verbs: apply to subjects and objects
-                    if (type === "V") {
-                        const dependents:number[] = [];
-                        input.deps[sentenceIndex].forEach((node,index)=>{
-                            if(node.parent === tokenIndex && node.label.toUpperCase().endsWith("BJ")) dependents.push(index);
-                        });
-                        dependents.forEach((index)=>{
-                            sentiment[sentenceIndex][index] += sentimentNum;
-                        });
-                    }
-
-                    // interjections: apply to the sentence root
-                    else if(type === "U"){
-                        const rootIndex = input.deps[sentenceIndex].findIndex(depsNode=>depsNode.parent === -1);
-                        sentiment[sentenceIndex][rootIndex] += sentimentNum;
-                    }
-
-                    // all other: apply to parent
-                    else {
-                        const parentIndex = input.deps[sentenceIndex][tokenIndex].parent;
-                        sentiment[sentenceIndex][parentIndex] += sentimentNum;
-                    }
-                }
-            });
-        });
-        return sentiment;
-    };
-    return Object.assign(input,{sentiment:calculateSentiment});
-}
+	const negation = this.negation();
+	const emphasis = this.emphasis();
+	sentiment.forEach((sentence,si)=>{
+		// multiply by -1 if negated
+		sentence.forEach((score,ti)=>{
+			if(score && negation[si][ti]) sentiment[si][ti] *= -1;
+			if(emphasis[si][ti]) sentiment[si][ti] *= emphasis[si][ti];
+		});
+	});
+	return sentiment;
+};
