@@ -5,11 +5,16 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "ts-node test/test.ts",
+    "prepublish": "tsc && ts-node test/test.ts"
   },
   "author": "Alex Corvi <alex@arrayy.com>",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "fin-emphasis": "^1.0.3",
+    "fin-negation": "^1.0.3"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/finnlp/en-pos.git"
@@ -21,5 +26,9 @@
   "bugs": {
     "url": "https://github.com/finnlp/en-pos/issues"
   },
-  "homepage": "https://github.com/finnlp/en-pos#readme"
+  "homepage": "https://github.com/finnlp/en-pos#readme",
+  "devDependencies": {
+    "@types/node": "^7.0.11",
+    "finnlp": "^1.0.25"
+  }
 }
