@@ -20,15 +20,15 @@ Fin.Run.prototype.sentiment = function(this:Fin.Run){
 			const sentimentNum = dict[token.toLowerCase()];
 			if(sentimentNum) {
 				const tag = sentence.tags[tokenIndex].charAt(0);
-				const subjectIndex = sentence.deps.findIndex(x=>x.label.endsWith("SUBJ") && x.parent === tokenIndex);
-				const objectIndex = sentence.deps.findIndex(x=>(x.label.endsWith("OBJ") || x.label.endsWith("OBL")) && x.parent === tokenIndex);
+				const objectIndex = sentence.deps.findIndex(x=>/OB/.test(x.label) && x.parent === tokenIndex);
 				const parentIndex = sentence.deps[tokenIndex].parent;
 				const rootIndex = sentence.deps.findIndex(x=>x.parent === -1);
+				const childCompliment = sentence.deps.findIndex(x=>x.parent === tokenIndex && /COMP/.test(x.label));
 				if(tag === "V") { // if verb
 					if(~objectIndex) // try to object
 						sentiment[sentenceIndex][objectIndex] = multiply(sentimentNum,tokenIndex,sentenceIndex,this);
-					else if(~subjectIndex) // try to subject
-						sentiment[sentenceIndex][subjectIndex] = multiply(sentimentNum,tokenIndex,sentenceIndex,this);
+					else if(~childCompliment)
+						sentiment[sentenceIndex][childCompliment] = multiply(sentimentNum,tokenIndex,sentenceIndex,this);
 					else if(~parentIndex) // try to parent
 						sentiment[sentenceIndex][parentIndex] = multiply(sentimentNum,tokenIndex,sentenceIndex,this);
 					else // try to root
