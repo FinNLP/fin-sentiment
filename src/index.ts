@@ -23,7 +23,7 @@ Fin.Run.prototype.sentiment = function(this:Fin.Run){
 				const objectIndex = sentence.deps.findIndex(x=>/OB/.test(x.label) && x.parent === tokenIndex);
 				const parentIndex = sentence.deps[tokenIndex].parent;
 				const rootIndex = sentence.deps.findIndex(x=>x.parent === -1);
-				const childCompliment = sentence.deps.findIndex(x=>x.parent === tokenIndex && /COMP/.test(x.label));
+				const childCompliment = sentence.deps.findIndex(x=>x.parent === tokenIndex && /COMP|ADVCL/.test(x.label));
 				if(tag === "V") { // if verb
 					if(~objectIndex) // try to object
 						sentiment[sentenceIndex][objectIndex] = multiply(sentimentNum,tokenIndex,sentenceIndex,this);
