@@ -25,31 +25,29 @@ Fin.Run.prototype.sentiment = function(this:Fin.Run){
 				const parentIndex = sentence.deps[tokenIndex].parent;
 				const rootIndex = sentence.deps.findIndex(x=>x.parent === -1);
 				if(tag === "V") { // if verb
-					if(~subjectIndex) // try to subject
-						sentiment[sentenceIndex][subjectIndex] = sentiment[sentenceIndex][subjectIndex] + sentimentNum;
-					else if(~objectIndex) // try to object
-						sentiment[sentenceIndex][objectIndex] = sentiment[sentenceIndex][objectIndex] + sentimentNum;
+					if(~objectIndex) // try to object
+						sentiment[sentenceIndex][objectIndex] = multiply(sentimentNum,tokenIndex,sentenceIndex,this);
+					else if(~subjectIndex) // try to subject
+						sentiment[sentenceIndex][subjectIndex] = multiply(sentimentNum,tokenIndex,sentenceIndex,this);
 					else if(~parentIndex) // try to parent
-						sentiment[sentenceIndex][parentIndex] = sentiment[sentenceIndex][parentIndex] + sentimentNum;
+						sentiment[sentenceIndex][parentIndex] = multiply(sentimentNum,tokenIndex,sentenceIndex,this);
 					else // try to root
-						sentiment[sentenceIndex][rootIndex] = sentiment[sentenceIndex][rootIndex] + sentimentNum;
+						sentiment[sentenceIndex][rootIndex] = multiply(sentimentNum,tokenIndex,sentenceIndex,this);
 				}
 				if(tag === "U") // Interjection: root
-					sentiment[sentenceIndex][rootIndex] = sentiment[sentenceIndex][rootIndex] + sentimentNum;
+					sentiment[sentenceIndex][rootIndex] = multiply(sentimentNum,tokenIndex,sentenceIndex,this);
 				else // all other
-					sentiment[sentenceIndex][parentIndex] = sentiment[sentenceIndex][parentIndex] + sentimentNum;
+					sentiment[sentenceIndex][parentIndex] = multiply(sentimentNum,tokenIndex,sentenceIndex,this);
 			}
-		});
-	});
-
-	const negation = this.negation();
-	const emphasis = this.emphasis();
-	sentiment.forEach((sentence,si)=>{
-		// multiply by -1 if negated
-		sentence.forEach((score,ti)=>{
-			if(score && negation[si][ti]) sentiment[si][ti] *= -1;
-			if(emphasis[si][ti]) sentiment[si][ti] *= emphasis[si][ti];
 		});
 	});
 	return sentiment;
 };
+
+function multiply(score:number,tokenIndex:number,sentenceIndex:number,instance:Fin.Run) {
+	const negation = instance.negation();
+	const emphasis = instance.emphasis();
+	if(negation[sentenceIndex][tokenIndex]) score = score * -1;
+	if(emphasis[sentenceIndex][tokenIndex]) score = score * emphasis[sentenceIndex][tokenIndex];
+	return score;
+}
